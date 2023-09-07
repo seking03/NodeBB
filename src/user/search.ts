@@ -73,10 +73,10 @@ export = function (User: User) {
         } else if (searchBy === 'uid') {
             uids = [query];
         } 
-        // else {
-        //     const searchMethod = data.findUids || findUids;
-        //     uids = await searchMethod(query, searchBy, data.hardCap);
-        // }
+        /* else {
+               const searchMethod = data.findUids || findUids;
+               uids = await searchMethod(query, searchBy, data.hardCap);
+        */
 
         uids = await filterAndSortUids(uids, data);
         const result = await plugins.hooks.fire('filter:users.search', { uids: uids, uid: uid });
