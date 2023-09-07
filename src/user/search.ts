@@ -12,20 +12,21 @@ interface User {
     lastonline: number;
     flags: string;
     search: SearchData;
+    uid: number;
     getUsers(users: number[], user: number): UserData;
     getUsersFields(users: number[], fields);
 }
 
 interface UserData {
     users: User[];
-    filter(user: User): User;
+    filter(user: User): User[];
 }
 
 interface SearchData {
     matchCount: number;
     pageCount: number;
     timing: string;
-    users: number[];
+    users: User[];
     query: string;
     searchBy: string;
     page: number;
@@ -71,10 +72,11 @@ export = function (User: User) {
             uids = await searchByIP(query);
         } else if (searchBy === 'uid') {
             uids = [query];
-        } else {
-            const searchMethod = data.findUids || findUids;
-            uids = await searchMethod(query, searchBy, data.hardCap);
-        }
+        } 
+        // else {
+        //     const searchMethod = data.findUids || findUids;
+        //     uids = await searchMethod(query, searchBy, data.hardCap);
+        // }
 
         uids = await filterAndSortUids(uids, data);
         const result = await plugins.hooks.fire('filter:users.search', { uids: uids, uid: uid });
@@ -112,7 +114,7 @@ export = function (User: User) {
 
         const userData: UserData = User.getUsers(uids, uid);
         searchResult.timing = (elapsedTimeSince(startTime) / 1000).toFixed(2);
-        searchResult.users = userData.filter((user: { uid: number; }) => user && user.uid > 0);
+        searchResult.users = userData.filter(User);
         return searchResult;
     };
 
