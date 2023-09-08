@@ -11,7 +11,7 @@ interface User {
     status: string;
     lastonline: number;
     flags: string;
-    search: SearchData;
+    search: Promise<SearchData>;
     uid: number;
     getUsers(users: number[], user: number): UserData;
     getUsersFields(users: number[], fields);
@@ -23,6 +23,7 @@ interface UserData {
 }
 
 interface SearchData {
+    map(arg0: (data: SearchData) => any): number[];
     matchCount: number;
     pageCount: number;
     timing: string;
@@ -77,7 +78,7 @@ export = function (User: User) {
                const searchMethod = data.findUids || findUids;
                uids = await searchMethod(query, searchBy, data.hardCap);
         }
-        
+
         uids = await filterAndSortUids(uids, data);
         const result = await plugins.hooks.fire('filter:users.search', { uids: uids, uid: uid });
         uids = result.uids;
@@ -101,7 +102,10 @@ export = function (User: User) {
             filters: [],
             sortBy: undefined,
             groupName: undefined,
-            sortDirection: undefined
+            sortDirection: undefined,
+            map: function (arg0: (data: SearchData) => any): number[] {
+                throw new Error('Function not implemented.');
+            }
         };
 
         if (paginate) {
@@ -118,7 +122,7 @@ export = function (User: User) {
         return Promise.resolve(searchResult);
     };
 
-    async function findUids(query: string, searchBy: any, hardCap: number) {
+    async function findUids(query: string, searchBy: any, hardCap: number): Promise<number[]> {
         if (!query) {
             return [];
         }
@@ -129,8 +133,8 @@ export = function (User: User) {
         const resultsPerPage = meta.config.userSearchResultsPerPage;
         hardCap = hardCap || resultsPerPage * 10;
 
-        const data = await db.getSortedSetRangeByLex(`${searchBy}:sorted`, min, max, 0, hardCap);
-        const uids = data.map((data: SearchData) => data.split(':').pop());
+        const data: SearchData = await db.getSortedSetRangeByLex(`${searchBy}:sorted`, min, max, 0, hardCap);
+        const uids: number[] = data.map((data: SearchData) => data.split(':').pop());
         return uids;
     }
 
