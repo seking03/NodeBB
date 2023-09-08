@@ -58,7 +58,7 @@ export = function (User: User) {
     };
 
 
-    User.search = async function (data: SearchData) {
+    User.search = async function (data: SearchData): Promise<SearchData> {
         const query = data.query || '';
         const searchBy = data.searchBy || 'username';
         const page = data.page || 1;
@@ -73,11 +73,11 @@ export = function (User: User) {
         } else if (searchBy === 'uid') {
             uids = [query];
         } 
-        /* else {
+        else {
                const searchMethod = data.findUids || findUids;
                uids = await searchMethod(query, searchBy, data.hardCap);
-        */
-
+        }
+        
         uids = await filterAndSortUids(uids, data);
         const result = await plugins.hooks.fire('filter:users.search', { uids: uids, uid: uid });
         uids = result.uids;
@@ -115,7 +115,7 @@ export = function (User: User) {
         const userData: UserData = User.getUsers(uids, uid);
         searchResult.timing = (elapsedTimeSince(startTime) / 1000).toFixed(2);
         searchResult.users = userData.filter(User);
-        return searchResult;
+        return Promise.resolve(searchResult);
     };
 
     async function findUids(query: string, searchBy: any, hardCap: number) {
